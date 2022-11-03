@@ -1,0 +1,20 @@
+/* cssStart: TRACKER LIST COMP CONTAINER*/
+    .trackerListCompContainer {
+        background-color: rgba(0, 0, 0, 0.501);
+        position: absolute;
+        top: 315px;
+        left: 240px;
+        width: 100%;
+        max-height: 355px;
+        width: 1000px;
+        overflow-y: auto;
+    }
+/* cssEnd: TRACKER LIST COMP CONTAINER*/
+
+
+/* cssStart: */
+    .trackerListContentContainer {
+        text-align: center;
+        color: rgb(233, 139, 17);
+    }
+/* cssEnd: */

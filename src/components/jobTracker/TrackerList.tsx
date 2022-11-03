@@ -2,6 +2,7 @@ import React from 'react'
 import { FormFields } from './JobForm';
 import Button from '../common/Button'; 
 import { onClick } from '../../utils/types';
+import '../../css/jobTracker/trackerList.css'; 
 
 
 interface TrackerListProps {
@@ -15,11 +16,11 @@ const TrackerList: React.FC<TrackerListProps>= ({apps, deleteApp}):JSX.Element =
     @description: 
     **/
   return (
-    <div>
+    <div className='trackerListCompContainer'>
         {apps.map( (app, idx) => {
             let btnLbl = 'Delete';
 
-            return <div key={idx}>
+            return <div key={idx} className='trackerListContentContainer'>
                 <span>{app.company_name}</span>
                 <span>{app.job_title}</span>
                 <span>{app.status}</span>

@@ -1,0 +1,11 @@
+/* cssStart: Global css: applies background image */
+  body {
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: url('../assets/img/abstract-futuristic-background-glowing-technology-sci-fi-frame-hud-ui_313905-1007.webp');
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+/* cssEnd: Global css: applies background image */

@@ -1,5 +1,5 @@
 import React from 'react'
-import JobFormTemplate from '../../templates/jobFormTemplate'; 
+import JobFormTemplate from '../../templates/jobTracker/jobFormTemplate'; 
 import {str, bool, eventChange, formEvent} from '../../utils/types'
 import { Validator, isValidForm } from '../../validators/formValidator';
  
@@ -98,6 +98,21 @@ class JobForm extends React.Component<Props, FormFields> {
     }
   }
 
+  private formatFieldName = (fieldName:str, exception:str = '', value:str = ''):str => {
+    /**
+    @description: Fn takes unformated fieldName and formats to be rendered on the UI. The default 
+    delimiter that this fn checks against is "_". E.g. formatFieldName("hello_world") => "hello world"
+    The fn also checks against exceptions the usr wishes to return a specified value for. 
+    formatFieldName("hello_world", "hello_world", "hello jeff") => "hello jeff", where the last two 
+    params are optional to usr. 
+    **/
+    if (fieldName === exception) {
+      return value; 
+    }
+    let formatedFieldName:str = fieldName.split('_').join(' '); 
+    return formatedFieldName; 
+  }
+
 
   public render() {
 
@@ -121,10 +136,11 @@ class JobForm extends React.Component<Props, FormFields> {
           formFields={this.state}
           formFieldValues={formFieldValues}
           formatedDate={this.state.date_submited_on}
+          radioCheckedValue={this.state.submitted_with_cover_letter}
           handleFieldValueChange={this.handleFieldValueChange}
           handleOnClickradioBtn={this.handleOnClickradioBtn}
-          radioCheckedValue={this.state.submitted_with_cover_letter}
           handleSubmit={this.handleSubmit}
+          formatFieldName={this.formatFieldName}
         />
       </div>
     )

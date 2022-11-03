@@ -1,0 +1,26 @@
+/* cssStart: JOB FORM COMP CONTAINER*/
+    .jobFormCompContainer {
+        position: relative;
+        top: 200px;
+    }
+/* cssEnd: JOB FORM COMP CONTAINER*/
+
+
+/* cssStart: JOB FORM*/
+    .jobForm {
+        color: rgb(233, 139, 17);
+        text-align: center;
+    }
+/* cssEnd: JOB FORM*/
+
+
+/* cssStart: CL RADIO BTN CONTAINER*/
+    .clRadioBtnContainer {
+        /* 
+        <div> tags do not contain "line break" by default they are a block el. To change the behaviour 
+        change the display property in CSS, to `display: inline;` or `display:inline-block;`. 
+        The latter allows you to have width properties.
+        */
+        display: inline;
+    }
+/* cssEnd: CL RADIO BTN CONTAINER*/

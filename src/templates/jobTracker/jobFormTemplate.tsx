@@ -1,6 +1,7 @@
 import React from 'react'; 
-import {FormFields, FormFieldValues} from '../components/jobTracker/JobForm'; 
-import {str, bool, eventChange, formEvent} from '../utils/types'
+import {FormFields, FormFieldValues} from '../../components/jobTracker/JobForm'; 
+import {str, bool, eventChange, formEvent} from '../../utils/types'; 
+import '../../css/jobTracker/jobForm.css'; 
 
 
 interface Props {
@@ -12,10 +13,11 @@ interface Props {
     formFields:             FormFields; 
     formFieldValues:        FormFieldValues; 
     formatedDate:           str; 
+    radioCheckedValue:      bool; 
     handleFieldValueChange: (event: eventChange) => void; 
     handleOnClickradioBtn:  () => void; 
-    radioCheckedValue:      bool; 
     handleSubmit:           (event: formEvent) => void; 
+    formatFieldName:        (fieldName:str, exception?:str, value?:str) => str; 
 }
 
 
@@ -23,12 +25,20 @@ class JobFormTemplate extends React.Component<Props>{
     
     public render() {
         return (
-            <div>
+            <div className='jobFormCompContainer'>
             {/* jsxElStart: FORM */}
-                <form onSubmit={this.props.handleSubmit}>
+                <form className='jobForm' onSubmit={this.props.handleSubmit}>
                 {Object.keys(this.props.formFields).map( (fieldName, idx) => {
                     return <label key={idx}>
-                        {fieldName !== 'errFields' && `${fieldName}:`} 
+                        {/* jsxElStart: FORM FIELD LBLs */}
+                            {
+                                (fieldName !== 'errFields' && fieldName !== 'notes') && 
+                                `${this.props.formatFieldName(
+                                    fieldName, "submitted_with_cover_letter", "Cover Letter"
+                                )}:`
+                            } 
+                        {/* jsxElEnd: FORM FIELD LBLs */}
+
                         {   fieldName === 'company_name' ? 
 
                             // {/* jsxElStart: COMP NAME */}
@@ -81,7 +91,7 @@ class JobFormTemplate extends React.Component<Props>{
                             fieldName === 'submitted_with_cover_letter' ? 
 
                             // {/* jsxElStart: COVER LETTER OPT */}
-                                <div>
+                                <div className='clRadioBtnContainer'>
                                     <label>Yes:</label>
                                     <input type='radio' 
                                         name='radioToggle' 
@@ -117,9 +127,11 @@ class JobFormTemplate extends React.Component<Props>{
                             fieldName === 'notes' ? 
 
                             // {/* jsxElStart: Notes */}
-                                <input className={fieldName} 
-                                value={this.props.formFields.notes}
-                                onChange={this.props.handleFieldValueChange}/> :
+                                <div> Notes:
+                                    <input className={fieldName} 
+                                    value={this.props.formFields.notes}
+                                    onChange={this.props.handleFieldValueChange}/>
+                                </div> :
                             // {/* jsxElEnd: Notes */}
 
                             null 
