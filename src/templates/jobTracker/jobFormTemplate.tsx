@@ -1,6 +1,6 @@
 import React from 'react'; 
 import {FormFields, FormFieldValues} from '../../components/jobTracker/JobForm'; 
-import {str, bool, eventChange, formEvent} from '../../utils/types'; 
+import {str, bool, eventChange, formEvent, num} from '../../utils/types'; 
 import '../../css/jobTracker/jobForm.css'; 
 
 
@@ -12,8 +12,9 @@ interface Props {
     **/
     formFields:             FormFields; 
     formFieldValues:        FormFieldValues; 
-    formatedDate:           str; 
-    radioCheckedValue:      bool; 
+    formatedDate:           str | undefined; 
+    radioCheckedValue:      bool | undefined; 
+    compClassName:          str | undefined; 
     handleFieldValueChange: (event: eventChange) => void; 
     handleOnClickradioBtn:  () => void; 
     handleSubmit:           (event: formEvent) => void; 
@@ -25,7 +26,7 @@ class JobFormTemplate extends React.Component<Props>{
     
     public render() {
         return (
-            <div className='jobFormCompContainer'>
+            <div className={this.props.compClassName}>
             {/* jsxElStart: FORM */}
                 <form className='jobForm' onSubmit={this.props.handleSubmit}>
                 {Object.keys(this.props.formFields).map( (fieldName, idx) => {

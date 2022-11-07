@@ -1,6 +1,6 @@
 import React from 'react'
 import JobFormTemplate from '../../templates/jobTracker/jobFormTemplate'; 
-import {str, bool, eventChange, formEvent} from '../../utils/types'
+import {str, bool, eventChange, formEvent, num} from '../../utils/types'
 import { Validator, isValidForm } from '../../validators/formValidator';
  
 
@@ -10,15 +10,18 @@ export interface FormFields {
   the formFields help with maintaining the formFields isolated into an object 
   rather than hardcoding them. This makes it more modular when needing to iter 
   over fields in the rendering portion. The interface is being exported to be 
-  iter'd in the template file. 
+  iter'd in the template file. Undefined type is assigned to the form fields only 
+  b/c the VAR `editingApp` is defined and can be undefined whenever a single application 
+  is NOT passed as a prop to this comp. The time that a application prop is passed to 
+  this comp is when usr decides to edit an application form field. 
   **/
-  company_name:                 str; 
-  job_title:                    str; 
-  status:                       str; 
-  date_submited_on:             str; 
-  submitted_with_cover_letter:  bool; 
-  site_applied_on:              str; 
-  notes:                        str; 
+  company_name:                 str   | undefined; 
+  job_title:                    str   | undefined; 
+  status:                       str   | undefined; 
+  date_submited_on:             str   | undefined; 
+  submitted_with_cover_letter:  bool  | undefined; 
+  site_applied_on:              str   | undefined; 
+  notes:                        str   | undefined; 
   errFields?:                   str[]; // contains field names that have err 
 }
 
@@ -36,27 +39,44 @@ interface Props {
   @description: Props defining `sendData` - in which the child comp, JobForm, sends data to parent comp
   `NewJob` to add data to dataset. 
   **/
-  sendData: (data:FormFields) => void 
+  sendData:       (data:FormFields) => void; 
+  compClassName:  str | undefined; 
+  editingApp?:    FormFields | undefined; 
 }
 
 
 class JobForm extends React.Component<Props, FormFields> {
   /**
-  @description: Logic to controlled comp for the form fields 
+  @description: Controlled template comp for job form that contains logic to the form fields. This comp 
+  is either used for filling out new job entry or as editing a job entry; both as a controlled comp. 
   **/
+  editingApp:FormFields = { // this VAR is declared and define for when usr wants to edit an application
+    company_name:                 this.props.editingApp?.company_name, 
+    job_title:                    this.props.editingApp?.job_title, 
+    status:                       this.props.editingApp?.status,  
+    date_submited_on:             this.props.editingApp?.date_submited_on, 
+    submitted_with_cover_letter:  this.props.editingApp?.submitted_with_cover_letter,
+    site_applied_on:              this.props.editingApp?.site_applied_on, 
+    notes:                        this.props.editingApp?.notes,
+  }
+
+
   state:FormFields = {
     /**
-    @description: Internal state for any new form comp
+    @description: Internal state for any new form entry or that of an editing one. The field value for
+    "job_title" for a new entry behaves as `defaultValue='none'` attr to select tag. field values for 
+    `status` and `site_applied_on` contain default values used as initial values for the html portion. 
     **/
-    company_name:                 '', 
-    job_title:                    'none', // behaves as `defaultValue='none'` attr to select tag 
-    status:                       'submitted', // default value 
-    date_submited_on:             new Date().toString().slice(0,15), 
-    submitted_with_cover_letter:  false,
-    site_applied_on:              'none', // default value 
-    notes:                        '',
-    errFields:                    [] 
+    company_name:                this.editingApp?.company_name || '', 
+    job_title:                   this.editingApp?.job_title || 'none', 
+    status:                      this.editingApp?.status || 'submitted', 
+    date_submited_on:            this.editingApp?.date_submited_on || new Date().toString().slice(0,15), 
+    submitted_with_cover_letter: this.editingApp?.submitted_with_cover_letter || false,
+    site_applied_on:             this.editingApp?.site_applied_on || 'none', 
+    notes:                       this.editingApp?.notes || '',
+    errFields:                   [] 
   }
+
 
   private baseState:FormFields = Object.assign({}, this.state); // deep copy of initial comp state 
 
@@ -98,6 +118,7 @@ class JobForm extends React.Component<Props, FormFields> {
     }
   }
 
+
   private formatFieldName = (fieldName:str, exception:str = '', value:str = ''):str => {
     /**
     @description: Fn takes unformated fieldName and formats to be rendered on the UI. The default 
@@ -133,6 +154,7 @@ class JobForm extends React.Component<Props, FormFields> {
     return (
       <div>
         <JobFormTemplate 
+          compClassName={this.props.compClassName}
           formFields={this.state}
           formFieldValues={formFieldValues}
           formatedDate={this.state.date_submited_on}
