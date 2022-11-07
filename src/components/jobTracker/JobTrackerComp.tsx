@@ -8,7 +8,10 @@ import TrackerList from './TrackerList';
 
 interface JobTracker {
     addNewSubmission:   bool; 
+    editMode:           bool; 
     applications:       FormFields[]; 
+    editingIdx?:        num; 
+    editingApp?:        FormFields
 }
 
 
@@ -23,6 +26,7 @@ class JobTrackerComp extends React.Component<{}, JobTracker> {
     **/
     state:JobTracker = {
         addNewSubmission:   false, 
+        editMode:           false, 
         applications:       []
     }
 
@@ -37,17 +41,27 @@ class JobTrackerComp extends React.Component<{}, JobTracker> {
 
     private recieveNewApplication = (data:FormFields):void => {
         /**
-        @description: Aux fn that recieves data from child comp and adds to dataset. Also makes use 
+        @description: Aux fn that recieves data from child comp and adds/edits to dataset. Makes use 
         of web storage API `localStorage` to store data in the browser. This API survives page 
         refreshes (sessionStorage) and even browser restarts. Note that using localStorage as a 
         database isn't best practice since the data will be lost when the usr clears the cache. 
         LocalStorage is good for adding dark mode features, saving a to-do list among other scenarios. 
         Here localStorage is used but the data can be backed up to store at a real database. 
         **/
-        this.setState({applications: [...this.state.applications, data]}); // ASYNC process 
-        let dataSet:FormFields[] = this.state.applications; 
-        dataSet.push(data); // used to update localStorage as sync process 
-        this.setLocalStorage('myTrackerList', dataSet); 
+       let dataSet:FormFields[] = this.state.applications; // makes shallow copy of state, same ref 
+
+        if (this.state.editingIdx !== undefined) { // editing block 
+            this.state.applications.splice(this.state.editingIdx, 1, data); // updates obj app at idx 
+            this.setState({
+                applications: [...this.state.applications], 
+                editingIdx: undefined
+            }); // saves edit to state and resets editingIdx to undefined
+        } else { // new job app entry block 
+            this.setState({applications: [...this.state.applications, data]}); // ASYNC process 
+            dataSet.push(data); // used to update localStorage as sync process 
+        }
+
+        this.setLocalStorage('myTrackerList', dataSet); // save to localStorage either new or edit entry
     }
         
          
@@ -77,16 +91,41 @@ class JobTrackerComp extends React.Component<{}, JobTracker> {
         this.setState({applications: myTrackerListData}); 
     }
 
+
+    private targetObj = (e:onClick):HTMLInputElement => {
+        /**
+        @description: HTMLInputElement extends HTMLElement and have the property value that the type 
+        HTMLElement doesn't have.
+        **/
+        return e.target as HTMLInputElement
+    }
+
     
     private deleteApp = (e:onClick):void => {
         /**
-        @description: Handles deleteing an app from applications 
+        @description: Handles deleteing an app from applications. HTMLElement type is the base for tag
+        el on DOM. HTMLInputElement extends HTMLElement and have the property value that the type 
+        HTMLElement doesn't have.
         **/
-        const target = e.target as HTMLInputElement; 
-        const idx:num = parseInt(target.value); 
+        const target        = this.targetObj(e), 
+              idx:num       = parseInt(target.value); 
+            
         this.state.applications.splice(idx,1); // rm and returns app being deleted 
         this.setState({applications: this.state.applications}); // updates applications w mutated arr 
         this.setLocalStorage('myTrackerList', this.state.applications); 
+    }
+
+
+    private editApplication = (e:onClick):void => {
+        /**
+        @description: Handles editing a single application on the tracker list. Set state to 
+        enter edit mode.
+        **/
+        const target                    = this.targetObj(e), 
+              idx:num                   = parseInt(target.value), 
+              jobEntryApp:FormFields    = this.state.applications[idx]; 
+        this.setState({editingIdx: idx}); 
+        this.setState({editingApp: jobEntryApp}); 
     }
 
 
@@ -123,12 +162,18 @@ class JobTrackerComp extends React.Component<{}, JobTracker> {
                     handleOnClick={this.handleOnClick}/> 
 
                 {   this.state.addNewSubmission && 
-                    <JobForm sendData={this.recieveNewApplication}/>
+                    <JobForm sendData={this.recieveNewApplication}
+                        compClassName={'jobFormCompContainer'}/>
                 }
 
                 {   this.state.applications.length !== 0 && 
                     <TrackerList apps={this.state.applications}
-                        deleteApp={this.deleteApp}/>
+                        deleteApp={this.deleteApp}
+                        editApplication={this.editApplication}
+                        editingIdx={this.state.editingIdx}
+                        editingAppData={this.state.editingApp}
+                        compClassNameData={'editFormCompContainer'}
+                        sendDataFn={this.recieveNewApplication}/>
                 }
 
                 <Button btnLbl={backupLbl} 
