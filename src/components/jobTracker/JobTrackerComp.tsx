@@ -4,6 +4,7 @@ import JobForm from './JobForm';
 import { bool, str, num, onClick } from '../../utils/types'
 import { FormFields } from './JobForm';
 import TrackerList from './TrackerList';
+import WeekCounter from './WeekCounter';
 
 
 interface JobTracker {
@@ -166,6 +167,8 @@ class JobTrackerComp extends React.Component<{}, JobTracker> {
                         compClassName={'jobFormCompContainer'}/>
                 }
 
+                {/* {<WeekCounter applications={this.state.applications}/>} */}
+
                 {   this.state.applications.length !== 0 && 
                     <TrackerList apps={this.state.applications}
                         deleteApp={this.deleteApp}
@@ -179,6 +182,10 @@ class JobTrackerComp extends React.Component<{}, JobTracker> {
                 <Button btnLbl={backupLbl} 
                     withEventObj={false}
                     handleOnClick={this.downloadDataSet}/>
+                
+                {   this.state.applications.length > 0 && 
+                    <WeekCounter applications={this.state.applications}/>
+                }
             </div>
         )
     }
