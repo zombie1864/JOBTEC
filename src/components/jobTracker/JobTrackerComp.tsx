@@ -167,7 +167,6 @@ class JobTrackerComp extends React.Component<{}, JobTracker> {
                         compClassName={'jobFormCompContainer'}/>
                 }
 
-                {/* {<WeekCounter applications={this.state.applications}/>} */}
 
                 {   this.state.applications.length !== 0 && 
                     <TrackerList apps={this.state.applications}
