@@ -38,11 +38,12 @@ class WeekCounter extends React.Component<Props, Time> {
         `componentDidMount` lifecycle hits `firstWeek` will be defined as a string. 
         **/
        
-        let firstWeek:str = this.props.applications[0].date_submited_on !== undefined ? 
-                            this.props.applications[0].date_submited_on : 'Sat Jan 01 2000', 
-            currWeek:str =  new Date().toString().slice(0,15);
+        let firstWeek:str       = this.props.applications[0].date_submited_on !== undefined ? 
+                                this.props.applications[0].date_submited_on : 'Sat Jan 01 2000', 
+            monOfFirstWeek:Date = this.getMonday(new Date(firstWeek)), 
+            currWeek:str        =  new Date().toString().slice(0,15);
         
-        return this.weeksSinceCounter(firstWeek, currWeek); 
+        return this.weeksSinceCounter(monOfFirstWeek, currWeek); 
     }
 
 
@@ -54,10 +55,11 @@ class WeekCounter extends React.Component<Props, Time> {
         **/
         let arrOfSubmissionDate:str[]       = this.arrOfappSubmissionDate(), 
             appCounterDataset:any           = this.applicationsCounter(arrOfSubmissionDate), 
-            startDate:str | undefined       = this.props.applications[0].date_submited_on; 
+            startDate:str | undefined       = this.props.applications[0].date_submited_on, 
+            monOfStartDate:Date             = this.getMonday(new Date(startDate || 'Jan 01 2000'));
 
         appCounterDataset.forEach((entry:(str|num)[]) => {
-            entry[0] = this.weeksSinceCounter(startDate, entry[0]); // changes date to numerical num
+            entry[0] = this.weeksSinceCounter(monOfStartDate, entry[0]); // changes date to numerical num
         })
 
         return appCounterDataset[0][0] === undefined ? [[0, 0]] : appCounterDataset; 
@@ -120,8 +122,22 @@ class WeekCounter extends React.Component<Props, Time> {
         let endDate:any = new Date(date), // any type to allow Js-specific wonky logic 
             startDate:any = new Date(initialDate), // allows Js-specific wonky logic - see nxt line
             timeInWeeks:num = (endDate - startDate) * (1/1000) * (1/ 60) * (1/60) * (1/24) * (1/7); 
-        
+
         return Math.ceil(timeInWeeks) === 0 ? 1 : Math.ceil(timeInWeeks); 
+    }
+
+    
+    private getMonday = (date:Date):Date => {
+        /**
+        @description: Returns the first day of the week from the `date`
+        **/
+        
+        let numOfTheWeek:num = date.getDay(), //num from week of `date`, Sun = 0, Mon = 1, Tue = 2, etc
+            numDay:num       = date.getDate(), // gets numerical day of `date`, `Dec 01 2000` => 1
+            adjuster:num     = (numOfTheWeek === 0 ? -6 : 1), // adj to Mon = 1, if 0 adjust to last week
+            diff:num         = numDay - numOfTheWeek + adjuster; // gets numerical day of Mon 
+        
+        return new Date(date.setDate(diff)); // sets to the Mon `date` of the week from `date`
     }
 
 
@@ -140,12 +156,12 @@ class WeekCounter extends React.Component<Props, Time> {
 
 
     public render() {
-        // let data = this.appSentPerWeekDataset(); 
+
         return (
         <div style={{color: 'blue'}}>
             <WeekCounterTemplate numOfWeeks={this.state.numOfWeeks}/>
             {this.appSentPerWeekDataset().map((entry, idx) => {
-                return <p key={idx}>Week: {entry[0]} App sent: {entry[1]}</p>
+                return <p key={idx}>Week: {entry[0]} # of App sent: {entry[1]}</p>
             })}
         </div>
         )
