@@ -54,15 +54,56 @@ class WeekCounter extends React.Component<Props, Time> {
         [[1, 25], [2, 10]] (first arr reads: "week 1, 25 applications sent").
         **/
         let arrOfSubmissionDate:str[]       = this.arrOfappSubmissionDate(), 
-            appCounterDataset:any           = this.applicationsCounter(arrOfSubmissionDate), 
+            dataset:any                     = this.applicationsCounter(arrOfSubmissionDate), 
             startDate:str | undefined       = this.props.applications[0].date_submited_on, 
             monOfStartDate:Date             = this.getMonday(new Date(startDate || 'Jan 01 2000'));
-
-        appCounterDataset.forEach((entry:(str|num)[]) => {
+        
+        dataset.forEach((entry:(str|num)[]) => {
             entry[0] = this.weeksSinceCounter(monOfStartDate, entry[0]); // changes date to numerical num
-        })
+        }) // NOTE: this mutates the data inside VAR dataset
+        
+        
+        return dataset[0][0] === undefined ? [[0, 0]] : this.flattenDataset(dataset); 
+    }
 
-        return appCounterDataset[0][0] === undefined ? [[0, 0]] : appCounterDataset; 
+
+    private flattenDataset = (dataset:num[][]):num[][] => {
+        /**
+        @description: Flattens dataset which can contain duplicate week number and combines 
+        into a single week-value pair. Ex: [[1, 3],[1, 7],[2, 1],[3, 10]] => [[1, 10], [2, 1], [3, 10]]
+        **/
+        let flatDataset:any             = [], 
+            holdingEntry:num[]          = [], 
+            currRunningWeek:num | null  = null; 
+
+        for (let i = 0; i < dataset.length; i++) {
+            let currEntry = dataset[i], //[weekNum, appSent]
+                // conditional VARs
+                matchingEntry       = currRunningWeek === currEntry[0], 
+                nonMatchingEntry    = currRunningWeek !== currEntry[0], 
+                lastEntry           = i === dataset.length - 1; 
+            
+            if (!currRunningWeek) {                     // deals w initial entry 
+                holdingEntry    = currEntry;  
+                currRunningWeek = currEntry[0]; 
+            } 
+            else if (matchingEntry && lastEntry) {      // deals w nxt matching entry
+                holdingEntry[1] += currEntry[1]
+                flatDataset.push(holdingEntry); 
+            } 
+            else if (nonMatchingEntry && !lastEntry) {  // deals w nxt non-matching entry 
+                flatDataset.push(holdingEntry); 
+                holdingEntry    = currEntry; 
+                currRunningWeek = currEntry[0]; 
+            } 
+            else if (nonMatchingEntry && lastEntry) {   // deals w last non-matching entry
+                flatDataset.push(holdingEntry); // appends the holding entry from prev itration 
+                flatDataset.push(currEntry)     // appends currEntry which is the last entry 
+            } else {                                    // default behavior 
+                holdingEntry[1] += currEntry[1]; // mutates holdingEntry second value 
+            }
+        }
+        return flatDataset; 
     }
 
 
@@ -90,26 +131,21 @@ class WeekCounter extends React.Component<Props, Time> {
             counter:num             = 0; 
 
         dataset.forEach((date, idx) => {            
-            if (day === '') // initalizes this fn VARs
-                { 
-                    day = date; 
-                    counter += 1; 
-                } 
-            else if (day !== date) // saves prev values and initalizes this fn VARs to the next day 
-                { 
-                    counterContainer.push([day, counter]); 
-                    day = date; 
-                    counter = 1; 
-                } 
-            else if (day === date && idx === dataset.length - 1) // handles last day
-                {  
-                    counter += 1; // includes the last entry 
-                    counterContainer.push([day, counter]); 
-                } 
-            else // incr counter 
-                { 
-                    counter += 1; 
-                }
+            if (day === '') { // initalizes this fn VARs {
+                day = date; 
+                counter += 1; 
+            } 
+            else if (day !== date) { // saves prev values and initalizes this fn VARs to the next day 
+                counterContainer.push([day, counter]); 
+                day = date; 
+                counter = 1; 
+            } 
+            else if (day === date && idx === dataset.length - 1) { // handles last day
+                counter += 1; // includes the last entry 
+                counterContainer.push([day, counter]); 
+            } else { // incr counter  
+                counter += 1; 
+            }
         })
         return counterContainer.length === 0 ? [['Jan 01 2000', 1]] : counterContainer; 
     }
