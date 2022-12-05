@@ -178,10 +178,12 @@ class JobTrackerComp extends React.Component<{}, JobTracker> {
                         sendDataFn={this.recieveNewApplication}/>
                 }
 
+
                 <Button btnLbl={backupLbl} 
                     withEventObj={false}
                     handleOnClick={this.downloadDataSet}/>
                 
+
                 {   this.state.applications.length > 0 && 
                     <WeekCounter applications={this.state.applications}/>
                 }

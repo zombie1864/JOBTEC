@@ -16,8 +16,8 @@ interface Time {
     /**
     @description: Describes dt for this comp state. 
     **/
-    currTime:               str; 
-    numOfWeeks:             num; 
+    currTime:   str; 
+    numOfWeeks: num; 
 }
 
 
@@ -33,17 +33,29 @@ class WeekCounter extends React.Component<Props, Time> {
 
     private weeksSinceFirstApp = ():num => {
         /**
-        @description: Calculates the number of weeks that have passed since the first application. 
-        The `firstWeek` will be undefined when the comp is initially rendered but when the 
+        @description: Calculates the number of weeks that have passed since the first application 
+        was sent. The `firstWeek` will be undefined when the comp is initially rendered but when the 
         `componentDidMount` lifecycle hits `firstWeek` will be defined as a string. 
         **/
        
         let firstWeek:str       = this.props.applications[0].date_submited_on !== undefined ? 
                                 this.props.applications[0].date_submited_on : 'Sat Jan 01 2000', 
-            monOfFirstWeek:Date = this.getMonday(new Date(firstWeek)), 
+            monOfFirstWeek:Date = this.getMonday(new Date(firstWeek)), // counts weeks by Mondays 
             currWeek:str        =  new Date().toString().slice(0,15);
         
-        return this.weeksSinceCounter(monOfFirstWeek, currWeek); 
+        return this.weeksSinceCounter(new Date(monOfFirstWeek), new Date(currWeek)); 
+    }
+
+
+    private weeksSinceCounter = (initialDate:any, endDate:any):num => {
+        /**
+        @description: Counts how many weeks has passed between the initial start date and the end date. 
+        Any type on `initialDate` and `endDate` allows Js-specific wonky logic for `timeInWeeks`.
+        But when use requires `new Date(param)` to be passed as param to this fn 
+        **/
+        let timeInWeeks:num = (endDate - initialDate) * (1/1000) * (1/ 60) * (1/60) * (1/24) * (1/7); 
+
+        return Math.ceil(timeInWeeks) === 0 ? 1 : Math.ceil(timeInWeeks); 
     }
 
 
@@ -53,15 +65,15 @@ class WeekCounter extends React.Component<Props, Time> {
         of submission and the number of applications submitted on that given week, e.g: 
         [[1, 25], [2, 10]] (first arr reads: "week 1, 25 applications sent").
         **/
-        let arrOfSubmissionDate:str[]       = this.arrOfappSubmissionDate(), 
-            dataset:any                     = this.applicationsCounter(arrOfSubmissionDate), 
-            startDate:str | undefined       = this.props.applications[0].date_submited_on, 
-            monOfStartDate:Date             = this.getMonday(new Date(startDate || 'Jan 01 2000'));
+        let arrOfSubmissionDate:str[]   = this.arrOfappSubmissionDate(), // changes applications
+            dataset:(any|num)[][]       = this.applicationsCounter(arrOfSubmissionDate), 
+            startDate:str | undefined   = this.props.applications[0].date_submited_on, 
+            monOfStartDate:Date         = this.getMonday(new Date(startDate || 'Jan 01 2000'));
         
         dataset.forEach((entry:(str|num)[]) => {
-            entry[0] = this.weeksSinceCounter(monOfStartDate, entry[0]); // changes date to numerical num
+            let dateObj:Date = new Date(entry[0]); // verbal date 
+            entry[0] = this.weeksSinceCounter(monOfStartDate, dateObj); // changes date to numerical num
         }) // NOTE: this mutates the data inside VAR dataset
-        
         
         return dataset[0][0] === undefined ? [[0, 0]] : this.flattenDataset(dataset); 
     }
@@ -143,23 +155,12 @@ class WeekCounter extends React.Component<Props, Time> {
             else if (day === date && idx === dataset.length - 1) { // handles last day
                 counter += 1; // includes the last entry 
                 counterContainer.push([day, counter]); 
-            } else { // incr counter  
+            } 
+            else { // incr counter  
                 counter += 1; 
             }
         })
         return counterContainer.length === 0 ? [['Jan 01 2000', 1]] : counterContainer; 
-    }
-
-
-    private weeksSinceCounter = (initialDate:any, date:any):num => {
-        /**
-        @description: Counts how many weeks has passed between the startDate and the date
-        **/
-        let endDate:any = new Date(date), // any type to allow Js-specific wonky logic 
-            startDate:any = new Date(initialDate), // allows Js-specific wonky logic - see nxt line
-            timeInWeeks:num = (endDate - startDate) * (1/1000) * (1/ 60) * (1/60) * (1/24) * (1/7); 
-
-        return Math.ceil(timeInWeeks) === 0 ? 1 : Math.ceil(timeInWeeks); 
     }
 
     
@@ -192,7 +193,7 @@ class WeekCounter extends React.Component<Props, Time> {
 
 
     public render() {
-
+        
         return (
         <div style={{color: 'blue'}}>
             <WeekCounterTemplate numOfWeeks={this.state.numOfWeeks}/>

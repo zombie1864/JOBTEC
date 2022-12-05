@@ -67,13 +67,13 @@ class JobForm extends React.Component<Props, FormFields> {
     "job_title" for a new entry behaves as `defaultValue='none'` attr to select tag. field values for 
     `status` and `site_applied_on` contain default values used as initial values for the html portion. 
     **/
-    company_name:                this.editingApp?.company_name || '', 
-    job_title:                   this.editingApp?.job_title || 'none', 
-    status:                      this.editingApp?.status || 'submitted', 
+    company_name:                this.editingApp?.company_name     || '', 
+    job_title:                   this.editingApp?.job_title        || 'none', 
+    status:                      this.editingApp?.status           || 'submitted', 
     date_submited_on:            this.editingApp?.date_submited_on || new Date().toString().slice(0,15), 
     submitted_with_cover_letter: this.editingApp?.submitted_with_cover_letter || false,
-    site_applied_on:             this.editingApp?.site_applied_on || 'none', 
-    notes:                       this.editingApp?.notes || '',
+    site_applied_on:             this.editingApp?.site_applied_on  || 'none', 
+    notes:                       this.editingApp?.notes            || '',
     errFields:                   [] 
   }
 
