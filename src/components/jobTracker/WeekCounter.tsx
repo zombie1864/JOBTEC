@@ -1,6 +1,7 @@
 import React from 'react'; 
 import WeekCounterTemplate from '../../templates/jobTracker/weekCounterTemplate';
 import { bool, num, str } from '../../utils/types';
+import { getMonday, weeksSinceCounter, flattenDataset } from '../../utils/time'
 import { FormFields } from './JobForm';
 
 
@@ -31,34 +32,6 @@ class WeekCounter extends React.Component<Props, Time> {
     }
 
 
-    private weeksSinceFirstApp = ():num => {
-        /**
-        @description: Calculates the number of weeks that have passed since the first application 
-        was sent. The `firstWeek` will be undefined when the comp is initially rendered but when the 
-        `componentDidMount` lifecycle hits `firstWeek` will be defined as a string. 
-        **/
-       
-        let firstWeek:str       = this.props.applications[0].date_submited_on !== undefined ? 
-                                this.props.applications[0].date_submited_on : 'Sat Jan 01 2000', 
-            monOfFirstWeek:Date = this.getMonday(new Date(firstWeek)), // counts weeks by Mondays 
-            currWeek:str        =  new Date().toString().slice(0,15);
-        
-        return this.weeksSinceCounter(new Date(monOfFirstWeek), new Date(currWeek)); 
-    }
-
-
-    private weeksSinceCounter = (initialDate:any, endDate:any):num => {
-        /**
-        @description: Counts how many weeks has passed between the initial start date and the end date. 
-        Any type on `initialDate` and `endDate` allows Js-specific wonky logic for `timeInWeeks`.
-        But when use requires `new Date(param)` to be passed as param to this fn 
-        **/
-        let timeInWeeks:num = (endDate - initialDate) * (1/1000) * (1/ 60) * (1/60) * (1/24) * (1/7); 
-
-        return Math.ceil(timeInWeeks) === 0 ? 1 : Math.ceil(timeInWeeks); 
-    }
-
-
     private appSentPerWeekDataset = ():num[][] => {
         /**
         @description: A parsing algo that returns an arr of arr of nums repr the application's week 
@@ -68,54 +41,14 @@ class WeekCounter extends React.Component<Props, Time> {
         let arrOfSubmissionDate:str[]   = this.arrOfappSubmissionDate(), // changes applications
             dataset:(any|num)[][]       = this.applicationsCounter(arrOfSubmissionDate), 
             startDate:str | undefined   = this.props.applications[0].date_submited_on, 
-            monOfStartDate:Date         = this.getMonday(new Date(startDate || 'Jan 01 2000'));
+            monOfStartDate:Date         = getMonday(new Date(startDate || 'Jan 01 2000'));
         
         dataset.forEach((entry:(str|num)[]) => {
             let dateObj:Date = new Date(entry[0]); // verbal date 
-            entry[0] = this.weeksSinceCounter(monOfStartDate, dateObj); // changes date to numerical num
+            entry[0] = weeksSinceCounter(monOfStartDate, dateObj); // changes date to numerical num
         }) // NOTE: this mutates the data inside VAR dataset
         
-        return dataset[0][0] === undefined ? [[0, 0]] : this.flattenDataset(dataset); 
-    }
-
-
-    private flattenDataset = (dataset:num[][]):num[][] => {
-        /**
-        @description: Flattens dataset which can contain duplicate week number and combines 
-        into a single week-value pair. Ex: [[1, 3],[1, 7],[2, 1],[3, 10]] => [[1, 10], [2, 1], [3, 10]]
-        **/
-        let flatDataset:any             = [], 
-            holdingEntry:num[]          = [], 
-            currRunningWeek:num | null  = null; 
-
-        for (let i = 0; i < dataset.length; i++) {
-            let currEntry = dataset[i], //[weekNum, appSent]
-                // conditional VARs
-                matchingEntry       = currRunningWeek === currEntry[0], 
-                nonMatchingEntry    = currRunningWeek !== currEntry[0], 
-                lastEntry           = i === dataset.length - 1; 
-            
-            if (!currRunningWeek) {                     // deals w initial entry 
-                holdingEntry    = currEntry;  
-                currRunningWeek = currEntry[0]; 
-            } 
-            else if (matchingEntry && lastEntry) {      // deals w nxt matching entry
-                holdingEntry[1] += currEntry[1]
-                flatDataset.push(holdingEntry); 
-            } 
-            else if (nonMatchingEntry && !lastEntry) {  // deals w nxt non-matching entry 
-                flatDataset.push(holdingEntry); 
-                holdingEntry    = currEntry; 
-                currRunningWeek = currEntry[0]; 
-            } 
-            else if (nonMatchingEntry && lastEntry) {   // deals w last non-matching entry
-                flatDataset.push(holdingEntry); // appends the holding entry from prev itration 
-                flatDataset.push(currEntry)     // appends currEntry which is the last entry 
-            } else {                                    // default behavior 
-                holdingEntry[1] += currEntry[1]; // mutates holdingEntry second value 
-            }
-        }
-        return flatDataset; 
+        return dataset[0][0] === undefined ? [[0, 0]] : flattenDataset(dataset); 
     }
 
 
@@ -163,20 +96,6 @@ class WeekCounter extends React.Component<Props, Time> {
         return counterContainer.length === 0 ? [['Jan 01 2000', 1]] : counterContainer; 
     }
 
-    
-    private getMonday = (date:Date):Date => {
-        /**
-        @description: Returns the first day of the week from the `date`
-        **/
-        
-        let numOfTheWeek:num = date.getDay(), //num from week of `date`, Sun = 0, Mon = 1, Tue = 2, etc
-            numDay:num       = date.getDate(), // gets numerical day of `date`, `Dec 01 2000` => 1
-            adjuster:num     = (numOfTheWeek === 0 ? -6 : 1), // adj to Mon = 1, if 0 adjust to last week
-            diff:num         = numDay - numOfTheWeek + adjuster; // gets numerical day of Mon 
-        
-        return new Date(date.setDate(diff)); // sets to the Mon `date` of the week from `date`
-    }
-
 
     public componentDidMount() { 
         /**
@@ -186,9 +105,16 @@ class WeekCounter extends React.Component<Props, Time> {
         causes a re-render - having the rendering phase re-render, then rendering, and re-render - causes
         an infinit loop to form. It is always best to only have initialization values such as VAR or 
         fn that do not change the state be triggered in the rendering phase. 
+        Calculates the number of weeks that have passed since the first application 
+        was sent. The `firstWeek` will be undefined when the comp is initially rendered but when the 
+        `componentDidMount` lifecycle hits `firstWeek` will be defined as a string. 
         **/
-        let weeks = this.weeksSinceFirstApp(); 
-        this.setState({numOfWeeks: weeks});  
+        if (this.props.applications[0] !== undefined) {
+            let firstWeek:str = this.props.applications[0].date_submited_on || 'Jan 01 2000', 
+                weeks = weeksSinceCounter(getMonday(new Date(firstWeek)), new Date());
+            
+                this.setState({numOfWeeks: weeks});  
+        }
     }
 
 

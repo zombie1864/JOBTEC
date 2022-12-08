@@ -3,6 +3,7 @@ import JobForm, { FormFields } from './JobForm';
 import Button from '../common/Button'; 
 import { str, num, onClick, bool } from '../../utils/types';
 import '../../css/jobTracker/trackerList.css'; 
+import { getMonday, weeksSinceCounter, flattenDataset } from '../../utils/time';
 
 
 interface TrackerListProps {
@@ -17,51 +18,70 @@ interface TrackerListProps {
 }
 
 
-type datasetByDays = (str|FormFields[])[] //[['Mon Nov 01 20xx', FormFields[]], ...,[n, FormFields[]]]
-
-
-const TrackerList: React.FC<TrackerListProps> = ({
-        apps, deleteApp, editApplication, editingIdx, editingAppData, compClassNameData, sendDataFn
-    }):JSX.Element => {
+interface List {
     /**
-    @description: Func comp that renders application list 
+    @description: 
     **/
-    /** 
-        [devNotes]: 
-            []_On the UI show only the apps sent in the curr week. 
-            []_Old apps can be shown by onClicking a btn `show week #'s applications`
-            []_applications need to be divided into weeks 
-                week 1: 
-                    - ... 
-                    - ... 
-                week 2: 
-                    - ... 
-                    - ... 
-                    - ... 
-            []_ds: [(1, FormFields[]),(2, FormFields[]), ...,(n, FormFields[])]
+    showPrevWeeks: num[]
+}
+ 
+
+type datasetByDays  = (str | FormFields[])[] //[['Mon Nov 01 20xx', FormFields[]], ...,[k, FormFields[]]]
+type strDate        = str | FormFields | any // used to bypass js wonky logic 
+
+
+class TrackerList extends React.Component<TrackerListProps, List> {
+    /**
+    @description: Comp that renders application list 
+    []_What is missing is the logic to know what the curr week is 
+    []_in the render() 
+        []_IF len(this.state.showPrevWeeks) == 0
+            []_itr(app, appEntry[1])
+                []_return app 
+        []_ELIF appEntry[0] in this.state.showPrevWeeks
+            []_itr(app, appEntry[1])
+                []_return app 
     **/
-    const parseDataSetByWeeks = (initDataset:FormFields[]):any => {
+    state:List = {
+        showPrevWeeks: []
+    }
+
+    
+    private parseDataSetByWeeks = (initDataset:FormFields[]):any => {
         /**
         @description: place holder
         **/
-        let orderByDayDataset:datasetByDays = parseDataSetByDays(initDataset); 
-        console.log(orderByDayDataset);
+        let orderByDayDataset:datasetByDays = this.parseDataSetByDays(initDataset),
+            startDate:strDate               = orderByDayDataset[0][0], // date that first app was sent 
+            monOfFirstWeek:Date             = getMonday(new Date(startDate))
+        
+        orderByDayDataset.forEach((entry:any):any => {
+            // changes dataset from per day unit to per week unit 
+            let dateObj:Date = new Date(entry[0]); // verbal date 
+            entry[0] = weeksSinceCounter(monOfFirstWeek, dateObj) // changes date to numerical num
+        })
+
+        return flattenDataset(orderByDayDataset, true)
     }
 
 
-    const parseDataSetByDays = (initDataset:FormFields[]):datasetByDays => {
+    private parseDataSetByDays = (initDataset:FormFields[]):datasetByDays => {
         /**
-        @description: 
+        @description: Changes init dataset to the following format: 
+        [['Mon Nov 01 20xx',FormFields[]], ...]
+        Arr of arr in which each arr provides the day and how many apps where sent on that day
         **/
-        let orderByDayDataset:any[] = [], 
-        day:str | undefined     = '', 
-        appsSentOnGivenDay:any  = []; 
+        
+        let orderByDayDataset:any[]     = [], 
+            day:str | undefined         = '', 
+            appsSentOnGivenDay:any      = []; 
 
         initDataset.forEach((entry:FormFields, idx:num) => {
             let lastEntry:bool = idx === initDataset.length - 1; 
 
             if (day === '') { // on the first entry begin initialization 
                 day = entry.date_submited_on; 
+                appsSentOnGivenDay.push(entry);
             }
             else if (day !== entry.date_submited_on) { // day change 
                 orderByDayDataset.push([day, appsSentOnGivenDay]); 
@@ -79,42 +99,45 @@ const TrackerList: React.FC<TrackerListProps> = ({
     }
 
 
-    parseDataSetByWeeks(apps)
-    return (
-        
-        <div className='trackerListCompContainer'>
-            {apps.map( (app, idx) => {
-                let deleteLbl   = 'Delete',
-                    editLbl     = 'Edit'; 
-
-                if (idx === editingIdx) {
-                    return <div key={idx}>{
-                        <JobForm sendData={sendDataFn} 
-                            compClassName={compClassNameData}
-                            editingApp={editingAppData}/>
-                    }</div>
-                } else {
-                    return <div key={idx} className='trackerListContentContainer'>
-                        <span>{app.company_name}</span>
-                        <span>{app.job_title}</span>
-                        <span>{app.status}</span>
-                        <span>{app.date_submited_on}</span>
-                        <span>{app.submitted_with_cover_letter}</span>
-                        <span>{app.site_applied_on}</span>
-                        <span>{app.notes}</span>
-                        <Button btnLbl={deleteLbl} 
-                            withEventObj={true}
-                            handleOnClickEvent={deleteApp} 
-                            value={idx}/>
-                        <Button btnLbl={editLbl} 
-                            withEventObj={true}
-                            handleOnClickEvent={editApplication} 
-                            value={idx}/>
-                    </div>
-                }
-            })}
-        </div>
-    )
+    public render() {
+        // console.log(this.parseDataSetByWeeks(this.props.apps)); 
+        console.log();
+        return (
+            
+            <div className='trackerListCompContainer'>
+                {this.props.apps.map( (appEntry, idx) => {
+                    let deleteLbl   = 'Delete',
+                        editLbl     = 'Edit'; 
+    
+                    if (idx === this.props.editingIdx) {
+                        return <div key={idx}>{
+                            <JobForm sendData={this.props.sendDataFn} 
+                                compClassName={this.props.compClassNameData}
+                                editingApp={this.props.editingAppData}/>
+                        }</div>
+                    } else {
+                        return <div key={idx} className='trackerListContentContainer'>
+                            <span>{appEntry.company_name}</span>
+                            <span>{appEntry.job_title}</span>
+                            <span>{appEntry.status}</span>
+                            <span>{appEntry.date_submited_on}</span>
+                            <span>{appEntry.submitted_with_cover_letter}</span>
+                            <span>{appEntry.site_applied_on}</span>
+                            <span>{appEntry.notes}</span>
+                            <Button btnLbl={deleteLbl} 
+                                withEventObj={true}
+                                handleOnClickEvent={this.props.deleteApp} 
+                                value={idx}/>
+                            <Button btnLbl={editLbl} 
+                                withEventObj={true}
+                                handleOnClickEvent={this.props.editApplication} 
+                                value={idx}/>
+                        </div>
+                    }
+                })}
+            </div>
+        )
+    }
 }
 
 export default TrackerList
