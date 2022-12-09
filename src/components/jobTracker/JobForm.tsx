@@ -15,6 +15,7 @@ export interface FormFields {
   is NOT passed as a prop to this comp. The time that a application prop is passed to 
   this comp is when usr decides to edit an application form field. 
   **/
+  id:                           num   | undefined; 
   company_name:                 str   | undefined; 
   job_title:                    str   | undefined; 
   status:                       str   | undefined; 
@@ -40,6 +41,7 @@ interface Props {
   `NewJob` to add data to dataset. 
   **/
   sendData:       (data:FormFields) => void; 
+  apps?:          FormFields[];
   compClassName:  str | undefined; 
   editingApp?:    FormFields | undefined; 
 }
@@ -51,6 +53,7 @@ class JobForm extends React.Component<Props, FormFields> {
   is either used for filling out new job entry or as editing a job entry; both as a controlled comp. 
   **/
   editingApp:FormFields = { // this VAR is declared and define for when usr wants to edit an application
+    id:                           this.props.editingApp?.id, 
     company_name:                 this.props.editingApp?.company_name, 
     job_title:                    this.props.editingApp?.job_title, 
     status:                       this.props.editingApp?.status,  
@@ -67,6 +70,7 @@ class JobForm extends React.Component<Props, FormFields> {
     "job_title" for a new entry behaves as `defaultValue='none'` attr to select tag. field values for 
     `status` and `site_applied_on` contain default values used as initial values for the html portion. 
     **/
+    id:                          this.editingApp?.id               || undefined, 
     company_name:                this.editingApp?.company_name     || '', 
     job_title:                   this.editingApp?.job_title        || 'none', 
     status:                      this.editingApp?.status           || 'submitted', 
@@ -110,10 +114,13 @@ class JobForm extends React.Component<Props, FormFields> {
     let data:FormFields = {...this.state}; // shallow copy of state "data extraction"
     let validatorObj:Validator = isValidForm(data); 
 
+    if (data.id === undefined) data.id = this.props.apps?.length;
+
     if (!validatorObj.validForm) { // checks if form is valid 
       this.setState({errFields: validatorObj.errFields}); 
-    } else {
+    } else { 
       this.props.sendData(data); 
+      console.log(data.id);
       this.setState({...this.baseState}); 
     }
   }

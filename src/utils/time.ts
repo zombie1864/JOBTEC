@@ -2,7 +2,7 @@ import { FormFields } from '../components/jobTracker/JobForm';
 import { bool, num, str } from './types';
 
 
-type appsPerWeek = (str | FormFields[])[]; 
+type appsPerWeek = (str | FormFields[])[][]; 
 
 
 export const getMonday = (date:Date):Date => {

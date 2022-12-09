@@ -11,9 +11,12 @@ interface JobTracker {
     addNewSubmission:   bool; 
     editMode:           bool; 
     applications:       FormFields[]; 
-    editingIdx?:        num; 
+    editingId?:        num; 
     editingApp?:        FormFields
 }
+
+
+type _formFields = FormFields | undefined; 
 
 
 class JobTrackerComp extends React.Component<{}, JobTracker> {
@@ -51,12 +54,12 @@ class JobTrackerComp extends React.Component<{}, JobTracker> {
         **/
        let dataSet:FormFields[] = this.state.applications; // makes shallow copy of state, same ref 
 
-        if (this.state.editingIdx !== undefined) { // editing block 
-            this.state.applications.splice(this.state.editingIdx, 1, data); // updates obj app at idx 
+        if (this.state.editingId !== undefined) { // editing block 
+            this.state.applications.splice(this.state.editingId, 1, data); // updates obj app at idx 
             this.setState({
                 applications: [...this.state.applications], 
-                editingIdx: undefined
-            }); // saves edit to state and resets editingIdx to undefined
+                editingId: undefined
+            }); // saves edit to state and resets editingId to undefined
         } else { // new job app entry block 
             this.setState({applications: [...this.state.applications, data]}); // ASYNC process 
             dataSet.push(data); // used to update localStorage as sync process 
@@ -109,9 +112,15 @@ class JobTrackerComp extends React.Component<{}, JobTracker> {
         HTMLElement doesn't have.
         **/
         const target        = this.targetObj(e), 
-              idx:num       = parseInt(target.value); 
-            
-        this.state.applications.splice(idx,1); // rm and returns app being deleted 
+              trgId:num     = parseInt(target.value); 
+        console.log('DELETING:', target, trgId);
+        console.log(this.state.applications);
+        this.state.applications.forEach((jobApp:_formFields, idx:num) => {
+            if (jobApp?.id === trgId) { // deletes jobApp from applications @ idx 
+                this.state.applications.splice(idx, 1); 
+            }
+        })
+
         this.setState({applications: this.state.applications}); // updates applications w mutated arr 
         this.setLocalStorage('myTrackerList', this.state.applications); 
     }
@@ -122,11 +131,18 @@ class JobTrackerComp extends React.Component<{}, JobTracker> {
         @description: Handles editing a single application on the tracker list. Set state to 
         enter edit mode.
         **/
-        const target                    = this.targetObj(e), 
-              idx:num                   = parseInt(target.value), 
-              jobEntryApp:FormFields    = this.state.applications[idx]; 
-        this.setState({editingIdx: idx}); 
-        this.setState({editingApp: jobEntryApp}); 
+        let target                    = this.targetObj(e), 
+            trgId:num                 = parseInt(target.value), 
+            jobApp:_formFields        = undefined; 
+        
+        this.state.applications.forEach((app:_formFields) => { // itr(apps, app) search for matching id
+            if (app?.id === trgId) { 
+                jobApp = app; 
+            }
+        })
+
+        this.setState({editingId: trgId}); 
+        this.setState({editingApp: jobApp}); 
     }
 
 
@@ -163,7 +179,8 @@ class JobTrackerComp extends React.Component<{}, JobTracker> {
                     handleOnClick={this.handleOnClick}/> 
 
                 {   this.state.addNewSubmission && 
-                    <JobForm sendData={this.recieveNewApplication}
+                    <JobForm apps={this.state.applications}
+                        sendData={this.recieveNewApplication}
                         compClassName={'jobFormCompContainer'}/>
                 }
 
@@ -172,7 +189,7 @@ class JobTrackerComp extends React.Component<{}, JobTracker> {
                     <TrackerList apps={this.state.applications}
                         deleteApp={this.deleteApp}
                         editApplication={this.editApplication}
-                        editingIdx={this.state.editingIdx}
+                        editingId={this.state.editingId}
                         editingAppData={this.state.editingApp}
                         compClassNameData={'editFormCompContainer'}
                         sendDataFn={this.recieveNewApplication}/>

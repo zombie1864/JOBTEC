@@ -17,8 +17,7 @@ interface Time {
     /**
     @description: Describes dt for this comp state. 
     **/
-    currTime:   str; 
-    numOfWeeks: num; 
+    currWeek: num; 
 }
 
 
@@ -27,8 +26,7 @@ class WeekCounter extends React.Component<Props, Time> {
     @description: Simple comp that shows the time lapsed in weeks since the first application submitted. 
     **/
     state:Time = {
-        currTime:   new Date().toString().slice(0,15), 
-        numOfWeeks: 0 
+        currWeek: 0 
     }
 
 
@@ -110,10 +108,10 @@ class WeekCounter extends React.Component<Props, Time> {
         `componentDidMount` lifecycle hits `firstWeek` will be defined as a string. 
         **/
         if (this.props.applications[0] !== undefined) {
-            let firstWeek:str = this.props.applications[0].date_submited_on || 'Jan 01 2000', 
-                weeks = weeksSinceCounter(getMonday(new Date(firstWeek)), new Date());
+            let firstWeek:str   = this.props.applications[0].date_submited_on || 'Jan 01 2000', 
+                weeks           = weeksSinceCounter(getMonday(new Date(firstWeek)), new Date());
             
-                this.setState({numOfWeeks: weeks});  
+                this.setState({currWeek: weeks});  
         }
     }
 
@@ -122,7 +120,7 @@ class WeekCounter extends React.Component<Props, Time> {
         
         return (
         <div style={{color: 'blue'}}>
-            <WeekCounterTemplate numOfWeeks={this.state.numOfWeeks}/>
+            <WeekCounterTemplate currWeek={this.state.currWeek}/>
             {this.appSentPerWeekDataset().map((entry, idx) => {
                 return <p key={idx}>Week: {entry[0]} # of App sent: {entry[1]}</p>
             })}

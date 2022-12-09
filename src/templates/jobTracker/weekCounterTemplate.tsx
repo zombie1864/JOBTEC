@@ -2,7 +2,7 @@ import React from 'react';
 import { num } from '../../utils/types';
 
 interface Props {
-    numOfWeeks: num; 
+    currWeek: num; 
 }
 
 class WeekCounterTemplate extends React.Component<Props>{
@@ -11,7 +11,7 @@ class WeekCounterTemplate extends React.Component<Props>{
         
         return (
             <div>
-                Current Week: {this.props.numOfWeeks}<br/>
+                Current Week: {this.props.currWeek}<br/>
             </div>
         )
     }
