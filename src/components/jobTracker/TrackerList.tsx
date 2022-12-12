@@ -127,7 +127,8 @@ class TrackerList extends React.Component<TrackerListProps, List> {
         return formFieldsArr.map((app:any, idx:num) => {
             if (app.id === editingIdx) {  
                 return <div key={idx}>{
-                    <JobForm sendData={this.props.sendDataFn} 
+                    <JobForm apps={this.props.apps}
+                        sendData={this.props.sendDataFn} 
                         compClassName={this.props.compClassNameData}
                         editingApp={this.props.editingAppData}/>
                 }</div>
@@ -157,7 +158,7 @@ class TrackerList extends React.Component<TrackerListProps, List> {
 
     public render() {
         let dataset:datasetByWeeks = this.parseDataSetByWeeks(this.props.apps)
-
+        
         return (
             <div className='trackerListCompContainer'>
                 {dataset.map((appEntry:(num | FormFields[]), idx:num) => {

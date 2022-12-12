@@ -70,7 +70,7 @@ class JobForm extends React.Component<Props, FormFields> {
     "job_title" for a new entry behaves as `defaultValue='none'` attr to select tag. field values for 
     `status` and `site_applied_on` contain default values used as initial values for the html portion. 
     **/
-    id:                          this.editingApp?.id               || undefined, 
+    id:                          this.editingApp?.id               || -1, 
     company_name:                this.editingApp?.company_name     || '', 
     job_title:                   this.editingApp?.job_title        || 'none', 
     status:                      this.editingApp?.status           || 'submitted', 
@@ -114,13 +114,23 @@ class JobForm extends React.Component<Props, FormFields> {
     let data:FormFields = {...this.state}; // shallow copy of state "data extraction"
     let validatorObj:Validator = isValidForm(data); 
 
-    if (data.id === undefined) data.id = this.props.apps?.length;
+    if (data.id === -1 && this.props.apps?.length === 0) { // default, len(apps) = 0; no apps 
+      data.id = this.props.apps?.length + 1;
+    }
+    else if (data.id === -1 && this.props.apps?.length === 1) { // len(apps) = 1; 1 jobApp 
+      data.id = this.props.apps?.length + 1
+    } 
+    else if (this.editingApp.id) { // when editing, copies id 
+      data.id = this.editingApp.id; 
+    }
+    else { // incr id according to len(apps) + 1
+      data.id = (this.props.apps?.length || 99) + 1 
+    }
 
     if (!validatorObj.validForm) { // checks if form is valid 
       this.setState({errFields: validatorObj.errFields}); 
     } else { 
       this.props.sendData(data); 
-      console.log(data.id);
       this.setState({...this.baseState}); 
     }
   }

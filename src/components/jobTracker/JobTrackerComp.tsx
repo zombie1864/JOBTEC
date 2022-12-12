@@ -11,7 +11,7 @@ interface JobTracker {
     addNewSubmission:   bool; 
     editMode:           bool; 
     applications:       FormFields[]; 
-    editingId?:        num; 
+    editingId?:         num; 
     editingApp?:        FormFields
 }
 
@@ -55,7 +55,11 @@ class JobTrackerComp extends React.Component<{}, JobTracker> {
        let dataSet:FormFields[] = this.state.applications; // makes shallow copy of state, same ref 
 
         if (this.state.editingId !== undefined) { // editing block 
-            this.state.applications.splice(this.state.editingId, 1, data); // updates obj app at idx 
+            let jobAppIdx:num = this.state.applications.findIndex((jobApp:FormFields) => 
+                jobApp.id === this.state.editingId
+            ) // finds jobApp idx 
+
+            this.state.applications.splice(jobAppIdx, 1, data); // updates jobApp at idx 
             this.setState({
                 applications: [...this.state.applications], 
                 editingId: undefined
@@ -113,8 +117,7 @@ class JobTrackerComp extends React.Component<{}, JobTracker> {
         **/
         const target        = this.targetObj(e), 
               trgId:num     = parseInt(target.value); 
-        console.log('DELETING:', target, trgId);
-        console.log(this.state.applications);
+
         this.state.applications.forEach((jobApp:_formFields, idx:num) => {
             if (jobApp?.id === trgId) { // deletes jobApp from applications @ idx 
                 this.state.applications.splice(idx, 1); 
