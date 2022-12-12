@@ -31,7 +31,7 @@ export const weeksSinceCounter = (initialDate:any, endDate:any):num => {
 }
 
 
-export const flattenDataset = (dataset:(num[][] | appsPerWeek), omitSecEntry:bool=false):num[][] => {
+export const flattenDataset = (dataset:(num[][] | appsPerWeek), omitSecEntry:bool=false):any => {
     /**
     @description: Flattens dataset which can contain duplicate week number and combines 
     into a single week-value pair. Ex: [[1, 3],[1, 7],[2, 1],[3, 10]] => [[1, 10], [2, 1], [3, 10]]
@@ -40,6 +40,8 @@ export const flattenDataset = (dataset:(num[][] | appsPerWeek), omitSecEntry:boo
         holdingEntry:any            = [], // holds entry and mutates Ex: [1, 3] -> [1, 10]
         currRunningWeek:num | null  = null; 
 
+    if (dataset.length === 1) return dataset; 
+    
     for (let i = 0; i < dataset.length; i++) {
         let currEntry:any = dataset[i], //[weekNum, appSent]
             // conditional VARs
