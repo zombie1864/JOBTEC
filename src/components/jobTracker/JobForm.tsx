@@ -15,6 +15,7 @@ export interface FormFields {
   is NOT passed as a prop to this comp. The time that a application prop is passed to 
   this comp is when usr decides to edit an application form field. 
   **/
+  id:                           num   | undefined; 
   company_name:                 str   | undefined; 
   job_title:                    str   | undefined; 
   status:                       str   | undefined; 
@@ -40,6 +41,7 @@ interface Props {
   `NewJob` to add data to dataset. 
   **/
   sendData:       (data:FormFields) => void; 
+  apps?:          FormFields[];
   compClassName:  str | undefined; 
   editingApp?:    FormFields | undefined; 
 }
@@ -51,6 +53,7 @@ class JobForm extends React.Component<Props, FormFields> {
   is either used for filling out new job entry or as editing a job entry; both as a controlled comp. 
   **/
   editingApp:FormFields = { // this VAR is declared and define for when usr wants to edit an application
+    id:                           this.props.editingApp?.id, 
     company_name:                 this.props.editingApp?.company_name, 
     job_title:                    this.props.editingApp?.job_title, 
     status:                       this.props.editingApp?.status,  
@@ -67,13 +70,14 @@ class JobForm extends React.Component<Props, FormFields> {
     "job_title" for a new entry behaves as `defaultValue='none'` attr to select tag. field values for 
     `status` and `site_applied_on` contain default values used as initial values for the html portion. 
     **/
-    company_name:                this.editingApp?.company_name || '', 
-    job_title:                   this.editingApp?.job_title || 'none', 
-    status:                      this.editingApp?.status || 'submitted', 
+    id:                          this.editingApp?.id               || -1, 
+    company_name:                this.editingApp?.company_name     || '', 
+    job_title:                   this.editingApp?.job_title        || 'none', 
+    status:                      this.editingApp?.status           || 'submitted', 
     date_submited_on:            this.editingApp?.date_submited_on || new Date().toString().slice(0,15), 
     submitted_with_cover_letter: this.editingApp?.submitted_with_cover_letter || false,
-    site_applied_on:             this.editingApp?.site_applied_on || 'none', 
-    notes:                       this.editingApp?.notes || '',
+    site_applied_on:             this.editingApp?.site_applied_on  || 'none', 
+    notes:                       this.editingApp?.notes            || '',
     errFields:                   [] 
   }
 
@@ -110,9 +114,22 @@ class JobForm extends React.Component<Props, FormFields> {
     let data:FormFields = {...this.state}; // shallow copy of state "data extraction"
     let validatorObj:Validator = isValidForm(data); 
 
+    if (data.id === -1 && this.props.apps?.length === 0) { // default, len(apps) = 0; no apps 
+      data.id = this.props.apps?.length + 1;
+    }
+    else if (data.id === -1 && this.props.apps?.length === 1) { // len(apps) = 1; 1 jobApp 
+      data.id = this.props.apps?.length + 1
+    } 
+    else if (this.editingApp.id) { // when editing, copies id 
+      data.id = this.editingApp.id; 
+    }
+    else { // incr id according to len(apps) + 1
+      data.id = (this.props.apps?.length || 99) + 1 
+    }
+
     if (!validatorObj.validForm) { // checks if form is valid 
       this.setState({errFields: validatorObj.errFields}); 
-    } else {
+    } else { 
       this.props.sendData(data); 
       this.setState({...this.baseState}); 
     }

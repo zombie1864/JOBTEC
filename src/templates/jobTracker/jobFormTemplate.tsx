@@ -25,11 +25,13 @@ interface Props {
 class JobFormTemplate extends React.Component<Props>{
     
     public render() {
+        let _formFields = {...this.props.formFields}; 
+        delete _formFields.id; 
         return (
             <div className={this.props.compClassName}>
             {/* jsxElStart: FORM */}
                 <form className='jobForm' onSubmit={this.props.handleSubmit}>
-                {Object.keys(this.props.formFields).map( (fieldName, idx) => {
+                {Object.keys(_formFields).map( (fieldName, idx) => {
                     return <label key={idx}>
                         {/* jsxElStart: FORM FIELD LBLs */}
                             {
